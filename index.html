@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu du TAO 道 - L'Équilibre de la Voie</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .tao-symbol {
+            font-size: 8rem;
+            margin: 20px 0;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+            to { text-shadow: 0 0 50px rgba(255, 215, 0, 1), 0 0 80px rgba(255, 215, 0, 0.6); }
+        }
+
+        .game-title {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ffd700, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-board {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .balance-meter {
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(90deg, #ff4757 0%, #ffa502 25%, #2ed573 50%, #ffa502 75%, #ff4757 100%);
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-indicator {
+            position: absolute;
+            top: -5px;
+            width: 30px;
+            height: 30px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            transition: left 0.3s ease;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .choice-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .choice-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            color: #fff;
+            border: 2px solid transparent;
+        }
+
+        .choice-btn:hover {
+            transform: translateY(-3px);
+            border-color: #ffd700;
+            box-shadow: 0 10px 25px rgba(255, 215, 0, 0.3);
+        }
+
+        .yin-btn {
+            background: linear-gradient(135deg, #2c2c2c, #1a1a1a);
+        }
+
+        .yang-btn {
+            background: linear-gradient(135deg, #f8f8f8, #e0e0e0);
+            color: #333;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+
+        .scenario {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .wisdom {
+            font-style: italic;
+            color: #ffd700;
+            margin: 15px 0;
+            font-size: 1rem;
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .final-message {
+            font-size: 1.3rem;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.1));
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="tao-symbol">道</div>
+        <h1 class="game-title">L'Équilibre de la Voie</h1>
+        
+        <div class="game-board">
+            <div class="score-display">
+                <div>Sagesse: <span id="wisdom-score">0</span></div>
+                <div>Niveau: <span id="level">1</span></div>
+                <div>Équilibre: <span id="balance-score">50</span>%</div>
+            </div>
+            
+            <div class="balance-meter">
+                <div class="balance-indicator" id="balance-indicator"></div>
+            </div>
+            
+            <div class="scenario" id="scenario">
+                Bienvenue dans le jeu du TAO. Vous devez naviguer dans la vie en trouvant l'équilibre entre les forces opposées. Chaque choix influence votre harmonie intérieure. Cliquez sur "Commencer" pour débuter votre voyage sur la Voie.
+            </div>
+            
+            <div class="choice-buttons" id="choices" style="display: none;">
+                <button class="choice-btn yin-btn" onclick="makeChoice('yin')">
+                    <div id="yin-choice">Choix Yin</div>
+                </button>
+                <button class="choice-btn yang-btn" onclick="makeChoice('yang')">
+                    <div id="yang-choice">Choix Yang</div>
+                </button>
+            </div>
+            
+            <button class="reset-btn" onclick="startGame()" id="start-btn">Commencer</button>
+            <button class="reset-btn" onclick="resetGame()" id="reset-btn" style="display: none;">Recommencer</button>
+            
+            <div class="wisdom" id="wisdom-text"></div>
+            <div class="final-message" id="final-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            balance: 50,
+            wisdom: 0,
+            level: 1,
+            gameStarted: false,
+            gameEnded: false
+        };
+
+        const scenarios = [
+            {
+                text: "Un conflit éclate entre deux amis proches. Comment réagissez-vous ?",
+                yin: "Écouter patiemment chaque partie et chercher à comprendre leurs émotions",
+                yang: "Intervenir activement pour proposer une solution concrète et directe",
+                wisdom: "La sagesse réside dans l'équilibre entre écoute et action."
+            },
+            {
+                text: "Vous devez prendre une décision importante pour votre avenir.",
+                yin: "Méditer longuement et suivre votre intuition profonde",
+                yang: "Analyser rationnellement toutes les options et agir rapidement",
+                wisdom: "L'intuition et la raison sont les deux faces d'une même pièce."
+            },
+            {
+                text: "Face à une injustice, quelle est votre approche ?",
+                yin: "Accepter et chercher la leçon cachée dans cette épreuve",
+                yang: "Lutter activement contre l'injustice et défendre vos droits",
+                wisdom: "Parfois il faut plier comme le roseau, parfois résister comme le chêne."
+            },
+            {
+                text: "Comment gérez-vous le stress du quotidien ?",
+                yin: "Vous retirer dans le calme et pratiquer la contemplation",
+                yang: "Vous engager dans l'action et résoudre les problèmes un par un",
+                wisdom: "L'eau calme et l'eau vive ont chacune leur moment."
+            },
+            {
+                text: "Un projet important rencontre des obstacles.",
+                yin: "Lâcher prise et laisser les choses suivre leur cours naturel",
+                yang: "Redoubler d'efforts et surmonter les obstacles par la persévérance",
+                wisdom: "Savoir quand persister et quand céder est l'art du sage."
+            },
+            {
+                text: "Comment cultivez-vous vos relations ?",
+                yin: "Par la présence silencieuse et l'écoute empathique",
+                yang: "Par l'action généreuse et l'engagement actif",
+                wisdom: "L'amour s'exprime autant dans le silence que dans l'action."
+            }
+        ];
+
+        let currentScenario = 0;
+
+        function startGame() {
+            gameState.gameStarted = true;
+            gameState.gameEnded = false;
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('choices').style.display = 'grid';
+            document.getElementById('reset-btn').style.display = 'inline-block';
+            showNextScenario();
+        }
+
+        function showNextScenario() {
+            if (currentScenario >= scenarios.length) {
+                endGame();
+                return;
+            }
+
+            const scenario = scenarios[currentScenario];
+            document.getElementById('scenario').textContent = scenario.text;
+            document.getElementById('yin-choice').textContent = scenario.yin;
+            document.getElementById('yang-choice').textContent = scenario.yang;
+            document.getElementById('wisdom-text').textContent = '';
+        }
+
+        function makeChoice(choice) {
+            const scenario = scenarios[currentScenario];
+            
+            if (choice === 'yin') {
+                gameState.balance = Math.max(0, gameState.balance - 15);
+            } else {
+                gameState.balance = Math.min(100, gameState.balance + 15);
+            }
+            
+            // Bonus d'équilibre si proche du centre
+            if (gameState.balance >= 40 && gameState.balance <= 60) {
+                gameState.wisdom += 2;
+            } else {
+                gameState.wisdom += 1;
+            }
+            
+            updateDisplay();
+            showWisdom(scenario.wisdom);
+            
+            currentScenario++;
+            gameState.level = currentScenario + 1;
+            
+            setTimeout(() => {
+                if (currentScenario < scenarios.length) {
+                    showNextScenario();
+                } else {
+                    endGame();
+                }
+            }, 3000);
+        }
+
+        function showWisdom(wisdom) {
+            document.getElementById('wisdom-text').textContent = wisdom;
+        }
+
+        function updateDisplay() {
+            document.getElementById('wisdom-score').textContent = gameState.wisdom;
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('balance-score').textContent = gameState.balance;
+            
+            const indicator = document.getElementById('balance-indicator');
+            indicator.style.left = gameState.balance + '%';
+        }
+
+        function endGame() {
+            gameState.gameEnded = true;
+            document.getElementById('choices').style.display = 'none';
+            
+            let message = '';
+            let finalWisdom = '';
+            
+            if (gameState.balance >= 40 && gameState.balance <= 60) {
+                message = "🎉 Félicitations ! Vous avez trouvé l'équilibre de la Voie !";
+                finalWisdom = "Votre sagesse: " + gameState.wisdom + " points. Vous incarnez l'harmonie du TAO, sachant naviguer entre les opposés avec grâce.";
+            } else if (gameState.balance < 30) {
+                message = "🌙 Vous penchez vers le Yin...";
+                finalWisdom = "Votre sagesse: " + gameState.wisdom + " points. La contemplation et l'acceptation dominent votre chemin. Peut-être est-il temps d'ajouter un peu d'action ?";
+            } else if (gameState.balance > 70) {
+                message = "☀️ Vous penchez vers le Yang...";
+                finalWisdom = "Votre sagesse: " + gameState.wisdom + " points. L'action et la détermination guident vos pas. Peut-être pourriez-vous cultiver davantage la patience ?";
+            } else {
+                message = "⚖️ Vous cherchez encore votre équilibre...";
+                finalWisdom = "Votre sagesse: " + gameState.wisdom + " points. Le chemin du TAO est un voyage, pas une destination. Continuez à chercher l'harmonie.";
+            }
+            
+            document.getElementById('scenario').textContent = message;
+            document.getElementById('final-message').textContent = finalWisdom;
+            document.getElementById('final-message').style.display = 'block';
+        }
+
+        function resetGame() {
+            gameState = {
+                balance: 50,
+                wisdom: 0,
+                level: 1,
+                gameStarted: false,
+                gameEnded: false
+            };
+            currentScenario = 0;
+            
+            document.getElementById('choices').style.display = 'none';
+            document.getElementById('start-btn').style.display = 'inline-block';
+            document.getElementById('reset-btn').style.display = 'none';
+            document.getElementById('final-message').style.display = 'none';
+            document.getElementById('wisdom-text').textContent = '';
+            document.getElementById('scenario').textContent = 'Bienvenue dans le jeu du TAO. Vous devez naviguer dans la vie en trouvant l\'équilibre entre les forces opposées. Chaque choix influence votre harmonie intérieure. Cliquez sur "Commencer" pour débuter votre voyage sur la Voie.';
+            
+            updateDisplay();
+        }
+
+        // Initialisation
+        updateDisplay();
+    </script>
+</body>
+</html>
